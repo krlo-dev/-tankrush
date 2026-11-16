@@ -123,12 +123,27 @@ public class InterfazJuego : MonoBehaviour
         foreach (TMP_Text t in textos) if (t != null) t.text = valor;
     }
 
-    static void Atenuar(Button b, bool encendido)
+    // Colores originales de cada botón de sonido y su base (para restaurarlos al encender)
+    readonly System.Collections.Generic.Dictionary<Button, Color[]> coloresOriginales =
+        new System.Collections.Generic.Dictionary<Button, Color[]>();
+
+    void Atenuar(Button b, bool encendido)
     {
         if (b == null) return;
-        CanvasGroup g = b.GetComponent<CanvasGroup>();
-        if (g == null) g = b.gameObject.AddComponent<CanvasGroup>();
-        g.alpha = encendido ? 1f : 0.6f;
+        Image img = b.targetGraphic as Image;
+        Transform t = b.transform.parent != null ? b.transform.parent.Find(b.name + "_Base") : null;
+        Image baseImg = t != null ? t.GetComponent<Image>() : null;
+
+        if (!coloresOriginales.TryGetValue(b, out Color[] orig))
+        {
+            orig = new[] { img != null ? img.color : Color.white, baseImg != null ? baseImg.color : Color.white };
+            coloresOriginales[b] = orig;
+        }
+
+        // Apagado = gris lavanda opaco (sin transparencias que dejen ver la base)
+        Color gris = new Color(0.78f, 0.75f, 0.82f);
+        if (img != null) img.color = encendido ? orig[0] : Color.Lerp(orig[0], gris, 0.75f);
+        if (baseImg != null) baseImg.color = encendido ? orig[1] : Color.Lerp(orig[1], gris * 0.8f, 0.75f);
     }
 
     // ---------------- Paneles ----------------
